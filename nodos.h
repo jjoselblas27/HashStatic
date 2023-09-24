@@ -17,11 +17,13 @@ struct DataPage
     Pares<TK> page[N<TK>];
     int count;
     long next;
+    bool principal;
 
     DataPage()
     {
         count = 0;
         next = -1;
+        principal = false;
     }
 
     bool insert(Pares<TK> par)
@@ -135,7 +137,7 @@ long insertDataFile(Record &record, string dataFile)
 template<typename Record>
 void deleteListDataFile(vector<long> positions, string dataFile)
 {
-    File.open(dataFile, ios::in | ios::out | ios::binary);
+    fstream File(dataFile, ios::in | ios::out | ios::binary);
     for (long pos : positions)
     {
 
