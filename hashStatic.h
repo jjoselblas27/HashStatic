@@ -71,7 +71,6 @@ class HashStatic{
     }
     
     void insertPares(Pares<TK> par){
-        cout << "par ingresado: " << par.key << endl;
         std::fstream fileBucket(bucketFile, ios::in|ios::out|ios::binary);
         
         long header;
@@ -82,7 +81,6 @@ class HashStatic{
         
         long mainPos = hashFunction(par.key) % M;
         //long mainPos = 0;
-        cout << "mainpos: " << mainPos << "  ";
 
         fileBucket.seekg(sizeof(long) + mainPos*sizeof(dataPage), ios::beg);
         fileBucket.read((char*) &dataPage, sizeof(dataPage));
@@ -91,25 +89,20 @@ class HashStatic{
 
         //si no se puede insertar me voy a las paginas overflow, donde se maneja un freelist.
         if(!dataPage.insert(par)){
-            cout << "mainPos lleno" << endl;
             long overPos = dataPage.next;
             if(overPos > 0){
-                cout << "overPOS != -1" << endl;
 
                 fileBucket.seekg(overPos, ios::beg);
                 fileBucket.read((char*) &dataPage, sizeof(dataPage));
             }
             //si no hay next o no puedo insertar, creo una nueva pagina
             if(overPos == -1 || !dataPage.insert(par)){
-                cout << "creo una nueva pagina" << endl;
                 DataPage<TK> nueva;
                 nueva.insert(par);
                 nueva.next = overPos;
                 long newPos = 0;
-                cout << "header:" << header << endl;
                 //manejo el freelist, y obtengo el newPos.
                 if(header == -1){
-                    cout << "header == -1" << endl;
                     fileBucket.seekp(0, ios::end);
                     newPos = fileBucket.tellp();
                     fileBucket.write((char*) &nueva, sizeof(nueva));
@@ -132,7 +125,6 @@ class HashStatic{
                     fileBucket.write((char*) &next, sizeof(long));
                 }
 
-                cout << "despues" << endl;
                 //modifico el next  de la pagina mainPos y le ingreso el newPos
                 fileBucket.seekg(sizeof(long) + mainPos*sizeof(dataPage), ios::beg);
                 fileBucket.read((char*) &dataPage, sizeof(dataPage));
@@ -142,13 +134,11 @@ class HashStatic{
                 fileBucket.write((char*) &dataPage, sizeof(dataPage));
 
             }else{
-                cout << "el next no esta lleno " << endl;
                 fileBucket.seekp(overPos, ios::beg);
                 fileBucket.write((char*) &dataPage, sizeof(dataPage));
             }
         }
         else{
-            cout << "mainpos no lleno " << endl;
             fileBucket.seekp(sizeof(long) + mainPos*sizeof(dataPage), ios::beg);
             fileBucket.write((char*) &dataPage, sizeof(dataPage));
         }
@@ -236,20 +226,16 @@ class HashStatic{
         DataPage<TK> dataPage;
         vector<long> pos_records; 
         //posicion absoluta 
-        cout << "hash: " << hashFunction(key) % M << endl;
         long absPos = sizeof(long) + (hashFunction(key) % M)*sizeof(dataPage);
         //long absPos = sizeof(long);
-        cout << absPos << endl;
         do
         {
-            cout << "abspos: " << absPos << endl;
 
             fileBucket.seekg(absPos, ios::beg);
             fileBucket.read((char*) &dataPage, sizeof(dataPage));
             vector<long> temp = dataPage.search(key);
             
             dataPage.show();
-            cout << "size temp: " << temp.size() << endl;
 
             pos_records.insert(pos_records.end(), temp.begin(), temp.end());
 
@@ -270,22 +256,15 @@ public:
         this->bucketFile = "./database/" + bucket + ".bin";
         this->getKey = getKey;
 
-        cout << "datafile: " << this->dataFile << endl;
-        cout << "bucketfile: " << this->bucketFile << endl;
-
         if(!existe(this->dataFile)){
-            cout << "no existe " << endl;
             load<Record>(csv, this->dataFile);
-            cout << "load" << endl;
             buildHashIndex();
         }
         
     }
 
     vector<Record> search(TK key){
-        cout << "search" << endl;
         vector<long> pos_records = searchPares(key);
-        cout << "size pos_records: " << pos_records.size() << endl;
 
         ifstream fileData(dataFile, ios::binary);
         std::vector<Record> listRecords;
@@ -317,7 +296,6 @@ public:
     }
 
     vector<Record> rangeSearch(TK inf, TK sup){
-        cout << "rangeSearch";
         ifstream fileBucket(bucketFile, ios::binary);
         vector<long> pos_records;
         DataPage<TK> dataPage;
@@ -326,14 +304,12 @@ public:
             long absPos = sizeof(long) + (i)*sizeof(dataPage);
             do
             {
-                cout << "abspos: " << absPos << endl;
 
                 fileBucket.seekg(absPos, ios::beg);
                 fileBucket.read((char*) &dataPage, sizeof(dataPage));
                 vector<long> temp = dataPage.range(inf,sup);
                 
                 dataPage.show();
-                cout << "size temp: " << temp.size() << endl;
 
                 pos_records.insert(pos_records.end(), temp.begin(), temp.end());
 
