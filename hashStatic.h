@@ -1,6 +1,6 @@
 #include <iostream>
 #include <functional>
-#include "./nodos.h"
+#include "../auxiliar/nodos.h"
 
 /* estructura del bucketFIle con freelist tipo LIFO. 
 header
@@ -26,7 +26,7 @@ record next
 */
 
 
-template<typename TK, typename Record = Player,
+template<typename TK, typename Record = AudioFeatures,
         typename getLlave = std::function<TK(const Record&)>> 
 class HashStatic{
     string dataFile;
@@ -164,6 +164,8 @@ class HashStatic{
             fileBucket.read((char*) &dataPage, sizeof(dataPage));
             bool cambio = false;
 
+
+            dataPage.show();
             // cambio el ultimo por el que estoy revisando
             for (int i = 0; i < dataPage.count; i++)
             {
@@ -174,11 +176,13 @@ class HashStatic{
 
                     dataPage.page[i] = dataPage.page[dataPage.count - 1];
                     dataPage.count--;
+                    i--;
                 }
             }
-
+            cout << "new count:" << dataPage.count << endl;
             //eliminare una pagina si es que no es principal
             if(dataPage.count == 0 && !dataPage.principal){
+                cout << "cambiazo  " << endl;
                 //modificacion del padre
                 DataPage<TK> padre;
                 fileBucket.seekg(parentPage, ios::beg);
@@ -204,9 +208,10 @@ class HashStatic{
                 //parentPage mantiene su posicion.
             }else {
                 if(cambio){
+                    cout << "cambio true" << endl;
                 //si hubo algun cambio lo escribo en memoria
-                fileBucket.seekp(absPos, ios::beg);
-                fileBucket.write((char *)&dataPage, sizeof(dataPage));
+                    fileBucket.seekp(absPos, ios::beg);
+                    fileBucket.write((char *)&dataPage, sizeof(dataPage));
                 }
 
                 parentPage = absPos;
@@ -250,15 +255,18 @@ class HashStatic{
 
 
 public:
-    HashStatic(int M, string csv, string data, string bucket, getLlave getKey){
+    HashStatic(int M, string csv, string data, string value, getLlave getKey){
         this->M = M;
-        this->dataFile = "./database/"   + data + ".bin";
-        this->bucketFile = "./database/" + bucket + ".bin";
+        this->dataFile = "./indices/"  + data + ".bin";
+        this->bucketFile = "./indices/bucket_" + value + ".bin";
         this->getKey = getKey;
 
         if(!existe(this->dataFile)){
+            cout << "no existe " << endl;
             load<Record>(csv, this->dataFile);
+            cout << "hice el load" << endl;
             buildHashIndex();
+            cout << "contrui hash " << endl;
         }
         
     }
